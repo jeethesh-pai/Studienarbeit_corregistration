@@ -8,8 +8,8 @@ import numpy as np
 
 parser = argparse.ArgumentParser(description='Superpoint detector -- works only for maximum of 10 images at a time')
 parser.add_argument('--image', default='Image_test', help='Image directory for look up')
-parser.add_argument('--input_height', default=120, type=int, help='height of the image if resize is needed')
-parser.add_argument('--input_width', default=160, type=int, help='width of the image if resize is needed')
+parser.add_argument('--height', default=120, type=int, help='height of the image if resize is needed')
+parser.add_argument('--width', default=160, type=int, help='width of the image if resize is needed')
 parser.add_argument('--nms', default=4, type=int, help='a parameter that reduces the no. of points detected by '
                                                        'imposing stricter conditions')
 parser.add_argument('--gpu', help='toggles the program to run on gpu', default=False, type=bool)
@@ -28,6 +28,7 @@ elif len(list_dir) % 2 != 0:
     for j, file in enumerate(list_dir):
         file_name = args.image + '/' + file
         image = cv2.imread(file_name)
+        image = cv2.resize(image, (args.height, args.width))
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image_gray = np.asarray(image_gray, dtype=np.float32) / 255.0
         points, descriptor, heat_map = model.run(image_gray)
@@ -44,6 +45,7 @@ else:
     for j, images in enumerate(list_dir):
         file_name = args.image + '/' + images
         image = cv2.imread(file_name)
+        image = cv2.resize(image, (args.height, args.width))
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image_gray = np.asarray(image_gray, dtype=np.float32) / 255.0
         points, descriptor, heat_map = model.run(image_gray)
