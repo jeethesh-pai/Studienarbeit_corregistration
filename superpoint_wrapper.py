@@ -5,6 +5,10 @@ from SuperPointPretrainedNetwork import demo_superpoint as superpoint
 import argparse
 import numpy as np
 
+"""
+This script marks keypoints on the given set of images with help of Superpoint algorithm. Please look in to requirements
+for details regarding installation. For this script images inside Image_test folder will be taken for analysis
+Please make sure not to paste more than 10 photos for better visualization of marked keypoints."""
 
 parser = argparse.ArgumentParser(description='Superpoint detector -- works only for maximum of 10 images at a time')
 parser.add_argument('--image', default='Image_test', help='Image directory for look up')
@@ -28,7 +32,7 @@ elif len(list_dir) % 2 != 0:
     for j, file in enumerate(list_dir):
         file_name = args.image + '/' + file
         image = cv2.imread(file_name)
-        image = cv2.resize(image, (args.height, args.width))
+        image = cv2.resize(image, (args.width, args.height))
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image_gray = np.asarray(image_gray, dtype=np.float32) / 255.0
         points, descriptor, heat_map = model.run(image_gray)
@@ -45,7 +49,7 @@ else:
     for j, images in enumerate(list_dir):
         file_name = args.image + '/' + images
         image = cv2.imread(file_name)
-        image = cv2.resize(image, (args.height, args.width))
+        image = cv2.resize(image, (args.width, args.height))
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image_gray = np.asarray(image_gray, dtype=np.float32) / 255.0
         points, descriptor, heat_map = model.run(image_gray)
@@ -57,9 +61,3 @@ else:
             counts = counts + 1
         axes[counts, j % cols].imshow(image)
 plt.show()
-
-
-
-
-
-
