@@ -1,8 +1,12 @@
 import cv2
+import torch.cuda
+from torchvision import transforms
 from SuperPointPretrainedNetwork import demo_superpoint as superpoint
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from caps.CAPS.caps_model import CAPSModel, CAPSNet
+import caps.config as config
 
 model = superpoint.SuperPointFrontend(weights_path='SuperPointPretrainedNetwork/superpoint_v1.pth',
                                       nms_dist=4, conf_thresh=0.015, nn_thresh=0.7, cuda=False)
@@ -25,6 +29,25 @@ def extract_superpoint_keypoints(img):
     keypoint = np.transpose(keypoint)
     keypoint = [cv2.KeyPoint(int(point[0]), int(point[1]), 1) for point in keypoint]
     return keypoint, descriptor
+
+
+def extract_CAPSDescriptor(keypoint, img):
+    args = config.get_args()
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    args.data_dir = "Dense_match"
+    args.ckpt_path = "caps/caps-pretrained.pth"
+    descriptor_model = CAPSModel(args)
+    img_transform = transforms.Compose([transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
+    img = torch.from_numpy(img).float().cuda() / 255.0
+    img = torch.unsqueeze(img, dim=0)
+    img = img.permute(0, 3, 1, 2)
+    img = img_transform(img)
+    keypoint = cv2.KeyPoint_convert(keypoint)
+    keypoint = torch.Tensor(keypoint).cuda()
+    keypoint = torch.unsqueeze(keypoint, dim=0).int()
+    feat_c, feat_f = descriptor_model.extract_features(img, keypoint)
+    descriptor = torch.cat((feat_c, feat_f), -1).squeeze(0).detach().cpu().numpy()
+    return descriptor
 
 
 def match_descriptors(kp1, descriptor1, kp2, descriptor2):
@@ -129,7 +152,22 @@ image1 = cv2.resize(image1, (width, height), interpolation=cv2.INTER_AREA)
 image2 = cv2.imread(folder + file_name[1])
 image2 = cv2.resize(image2, (width, height), interpolation=cv2.INTER_AREA)
 # cb_image, keypoint_image = draw_matches_sift(image1, image2)
-cb_image, keypoint_image = draw_matches_superpoint(image1, image2, 0.7)
-cb_image = cv2.cvtColor(cb_image, cv2.COLOR_BGR2RGB)
-plt.imshow(cb_image)
+# cb_image, keypoint_image = draw_matches_superpoint(image1, image2, 0.7)
+# cb_image = cv2.cvtColor(cb_image, cv2.COLOR_BGR2RGB)
+# plt.imshow(cb_image)
+# plt.show()
+keypoints1, desc1 = extract_SIFT_keypoints(image1)
+desc1 = extract_CAPSDescriptor(keypoints1, image1)
+keypoints2, desc2 = extract_SIFT_keypoints(image2)
+desc2 = extract_CAPSDescriptor(keypoints2, image2)
+kp1_match, kp2_match, match = match_descriptors(keypoints1, desc1, keypoints2, desc2)
+new_keypoint = offset_keypoint(kp2_match, image1.shape)
+combined_keypoint = np.concatenate([kp1_match, new_keypoint], axis=0)
+combined_image = cv2.hconcat([image1, image2])
+kp_image = cv2.drawKeypoints(combined_image, combined_keypoint, None, color=(0, 255, 0))
+h_mat, inlier_points = compute_homography(kp1_match, kp2_match)
+match = np.array(match)[inlier_points.astype(bool)].tolist()
+matched_img = cv2.drawMatches(image1, keypoints1, image2, keypoints2, match, None,
+                              matchColor=(0, 255, 0), singlePointColor=(0, 0, 255))
+plt.imshow(matched_img)
 plt.show()
