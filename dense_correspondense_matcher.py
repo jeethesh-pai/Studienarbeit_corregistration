@@ -5,8 +5,8 @@ from SuperPointPretrainedNetwork import demo_superpoint as superpoint
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from caps.CAPS.caps_model import CAPSModel, CAPSNet
-import caps.config as config
+from caps_implementation.CAPS.caps_model import CAPSModel, CAPSNet
+import caps_implementation.config as config
 
 model = superpoint.SuperPointFrontend(weights_path='SuperPointPretrainedNetwork/superpoint_v1.pth',
                                       nms_dist=4, conf_thresh=0.015, nn_thresh=0.7, cuda=False)
@@ -35,7 +35,7 @@ def extract_CAPSDescriptor(keypoint, img):
     args = config.get_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args.data_dir = "Dense_match"
-    args.ckpt_path = "caps/caps-pretrained.pth"
+    args.ckpt_path = "caps-pretrained.pth"
     descriptor_model = CAPSModel(args)
     img_transform = transforms.Compose([transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
     img = torch.from_numpy(img).float().cuda() / 255.0
