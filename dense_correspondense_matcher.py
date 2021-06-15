@@ -85,6 +85,56 @@ def offset_keypoint(keypoint: list, img1_shape: tuple) -> list:
     return keypoint_new
 
 
+def draw_matches_superpoint_caps(img1: np.ndarray, img2: np.ndarray) -> (np.ndarray, np.ndarray):
+    """outputs an image which shows correspondence between two images with the help of superpoint keypoint and
+    caps descriptor
+    :param img1 - image 1 - 3 channel or 1 channel (image will be converted to grayscale)
+    :param img2 - image 2
+    :returns combined_image - image showing correspondence matches
+    :returns kp_image - returns image with keypoints marked in it
+    """
+    keypoint1, descriptor1 = extract_superpoint_keypoints(img1)
+    keypoint2, descriptor2 = extract_superpoint_keypoints(img2)
+    descriptor1 = extract_CAPSDescriptor(keypoint1, img1)
+    descriptor2 = extract_CAPSDescriptor(keypoint2, img2)
+    kp1_match, kp2_match, match = match_descriptors(keypoint1, descriptor1, keypoint2, descriptor2)
+    new_keypoint = offset_keypoint(kp2_match, img1.shape)
+    combined_keypoint = np.concatenate([kp1_match, new_keypoint], axis=0)
+    combined_image = cv2.hconcat([img1, img2])
+    kp_image = np.copy(combined_image)
+    kp_image = cv2.drawKeypoints(kp_image, combined_keypoint, None, color=(0, 255, 0))
+    h_mat, inlier_points = compute_homography(kp1_match, kp2_match)
+    match = np.array(match)[inlier_points.astype(bool)].tolist()
+    combined_image = cv2.drawMatches(img1, keypoint1, img2, keypoint2, match, None,
+                                     matchColor=(0, 255, 0), singlePointColor=(0, 0, 255))
+    return combined_image, kp_image
+
+
+def draw_matches_sift_caps(img1: np.ndarray, img2: np.ndarray) -> (np.ndarray, np.ndarray):
+    """outputs an image which shows correspondence between two images with the help of superpoint keypoint and
+    caps descriptor
+    :param img1 - image 1 - 3 channel or 1 channel (image will be converted to grayscale)
+    :param img2 - image 2
+    :returns combined_image - image showing correspondence matches
+    :returns kp_image - returns image with keypoints marked in it
+    """
+    keypoint1, descriptor1 = extract_SIFT_keypoints(img1)
+    keypoint2, descriptor2 = extract_SIFT_keypoints(img2)
+    descriptor1 = extract_CAPSDescriptor(keypoint1, img1)
+    descriptor2 = extract_CAPSDescriptor(keypoint2, img2)
+    kp1_match, kp2_match, match = match_descriptors(keypoint1, descriptor1, keypoint2, descriptor2)
+    new_keypoint = offset_keypoint(kp2_match, img1.shape)
+    combined_keypoint = np.concatenate([kp1_match, new_keypoint], axis=0)
+    combined_image = cv2.hconcat([img1, img2])
+    kp_image = np.copy(combined_image)
+    kp_image = cv2.drawKeypoints(kp_image, combined_keypoint, None, color=(0, 255, 0))
+    h_mat, inlier_points = compute_homography(kp1_match, kp2_match)
+    match = np.array(match)[inlier_points.astype(bool)].tolist()
+    combined_image = cv2.drawMatches(img1, keypoint1, img2, keypoint2, match, None,
+                                     matchColor=(0, 255, 0), singlePointColor=(0, 0, 255))
+    return combined_image, kp_image
+
+
 def draw_matches_superpoint(img1: np.ndarray, img2: np.ndarray, nn_thresh: float) -> \
         (np.ndarray, np.ndarray):
     """outputs an image which shows correspondence between two images with the help of superpoint descriptor and
@@ -95,8 +145,8 @@ def draw_matches_superpoint(img1: np.ndarray, img2: np.ndarray, nn_thresh: float
     :returns combined_image - image showing correspondence matches
     :returns kp_image - returns image with keypoints marked in it
     """
-    keypoint1, descriptor1 = extract_superpoint_keypoints(image1)
-    keypoint2, descriptor2 = extract_superpoint_keypoints(image2)
+    keypoint1, descriptor1 = extract_superpoint_keypoints(img1)
+    keypoint2, descriptor2 = extract_superpoint_keypoints(img2)
     match = descriptor_matcher.nn_match_two_way(descriptor1, descriptor2, nn_thresh=nn_thresh)
     match_desc1_idx = np.array(match[0, :], dtype=int)  # descriptor 1 matches
     match_desc2_idx = np.array(match[1, :], dtype=int)  # descriptor 2 matches
@@ -151,23 +201,6 @@ image1 = cv2.imread(folder + file_name[0])
 image1 = cv2.resize(image1, (width, height), interpolation=cv2.INTER_AREA)
 image2 = cv2.imread(folder + file_name[1])
 image2 = cv2.resize(image2, (width, height), interpolation=cv2.INTER_AREA)
-# cb_image, keypoint_image = draw_matches_sift(image1, image2)
-# cb_image, keypoint_image = draw_matches_superpoint(image1, image2, 0.7)
-# cb_image = cv2.cvtColor(cb_image, cv2.COLOR_BGR2RGB)
-# plt.imshow(cb_image)
-# plt.show()
-keypoints1, desc1 = extract_SIFT_keypoints(image1)
-desc1 = extract_CAPSDescriptor(keypoints1, image1)
-keypoints2, desc2 = extract_SIFT_keypoints(image2)
-desc2 = extract_CAPSDescriptor(keypoints2, image2)
-kp1_match, kp2_match, match = match_descriptors(keypoints1, desc1, keypoints2, desc2)
-new_keypoint = offset_keypoint(kp2_match, image1.shape)
-combined_keypoint = np.concatenate([kp1_match, new_keypoint], axis=0)
-combined_image = cv2.hconcat([image1, image2])
-kp_image = cv2.drawKeypoints(combined_image, combined_keypoint, None, color=(0, 255, 0))
-h_mat, inlier_points = compute_homography(kp1_match, kp2_match)
-match = np.array(match)[inlier_points.astype(bool)].tolist()
-matched_img = cv2.drawMatches(image1, keypoints1, image2, keypoints2, match, None,
-                              matchColor=(0, 255, 0), singlePointColor=(0, 0, 255))
+matched_img, keypoint_image = draw_matches_superpoint_caps(image1, image2)
 plt.imshow(matched_img)
 plt.show()
