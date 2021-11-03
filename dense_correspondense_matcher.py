@@ -10,6 +10,8 @@ import caps_implementation.config as config
 
 model = superpoint.SuperPointFrontend(weights_path='SuperPointPretrainedNetwork/superpoint_v1.pth',
                                       nms_dist=4, conf_thresh=0.015, nn_thresh=0.7, cuda=False)
+# model = superpoint.SuperPointFrontend(weights_path='superpointv1_TLShomo1.pt',
+#                                       nms_dist=4, conf_thresh=0.015, nn_thresh=0.7, cuda=False)
 
 # https://github.com/mmmfarrell/SuperPoint/blob/master/superpoint/match_features_demo.py
 descriptor_matcher = superpoint.PointTracker(max_length=4, nn_thresh=0.7)
@@ -35,15 +37,16 @@ def extract_CAPSDescriptor(keypoint, img):
     args = config.get_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args.data_dir = "Dense_match"
-    args.ckpt_path = "caps-pretrained.pth"
+    args.ckpt_path = "CAPS_grayscale_weights/150000.pth"
     descriptor_model = CAPSModel(args)
-    img_transform = transforms.Compose([transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
-    img = torch.from_numpy(img).float().cuda() / 255.0
+    img_transform = transforms.Compose([transforms.Grayscale(num_output_channels=3),
+                                        transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
+    img = torch.from_numpy(img).float().to(device) / 255.0
     img = torch.unsqueeze(img, dim=0)
     img = img.permute(0, 3, 1, 2)
     img = img_transform(img)
     keypoint = cv2.KeyPoint_convert(keypoint)
-    keypoint = torch.Tensor(keypoint).cuda()
+    keypoint = torch.Tensor(keypoint).to(device)
     keypoint = torch.unsqueeze(keypoint, dim=0).int()
     feat_c, feat_f = descriptor_model.extract_features(img, keypoint)
     descriptor = torch.cat((feat_c, feat_f), -1).squeeze(0).detach().cpu().numpy()
@@ -202,5 +205,7 @@ image1 = cv2.resize(image1, (width, height), interpolation=cv2.INTER_AREA)
 image2 = cv2.imread(folder + file_name[1])
 image2 = cv2.resize(image2, (width, height), interpolation=cv2.INTER_AREA)
 matched_img, keypoint_image = draw_matches_superpoint_caps(image1, image2)
+matched_img = cv2.cvtColor(matched_img, cv2.COLOR_BGR2RGB)
+keypoint_image = cv2.cvtColor(keypoint_image, cv2.COLOR_BGR2RGB)
 plt.imshow(matched_img)
 plt.show()
