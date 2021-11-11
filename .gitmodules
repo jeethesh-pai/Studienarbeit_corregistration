@@ -1,0 +1,6 @@
+[submodule "SuperPointPretrainedNetwork"]
+	path = SuperPointPretrainedNetwork
+	url = https://github.com/magicleap/SuperPointPretrainedNetwork.git
+[submodule "caps_implementation"]
+	path = caps_implementation
+	url = https://github.com/qianqianwang68/caps.git
