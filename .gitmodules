@@ -1,6 +1,0 @@
-[submodule "SuperPointPretrainedNetwork"]
-	path = SuperPointPretrainedNetwork
-	url = https://github.com/jeethesh-pai/Studienarbeit_corregistration.git
-[submodule "caps_implementation"]
-	path = caps_implementation
-	url = https://github.com/jeethesh-pai/Studienarbeit_corregistration.git
