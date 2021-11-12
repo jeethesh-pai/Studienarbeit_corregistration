@@ -4,10 +4,10 @@ import numpy as np
 import torch
 from torch import optim
 from torch.autograd import Variable
-import utils
+import caps_implementation.utils as utils
 import torchvision.utils as vutils
-from CAPS.criterion import CtoFCriterion
-from CAPS.network import CAPSNet
+from caps_implementation.CAPS.criterion import CtoFCriterion
+from caps_implementation.CAPS.network import CAPSNet
 
 
 class CAPSModel():
@@ -105,7 +105,8 @@ class CAPSModel():
             writer.add_image('Image', x, n_iter)
 
     def load_model(self, filename):
-        to_load = torch.load(filename)
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device("cpu")
+        to_load = torch.load(filename, map_location=device)
         self.model.load_state_dict(to_load['state_dict'])
         if 'optimizer' in to_load.keys():
             self.optimizer.load_state_dict(to_load['optimizer'])
