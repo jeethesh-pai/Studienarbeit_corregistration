@@ -131,3 +131,11 @@ dmypy.json
 CAPS_grayscale_weights/
 SuperPointPretrainedNetwork/__pycache__/
 caps_implementation/__pycache__/
+caps_implementation/CAPS/__pycache__/
+caps_implementation/jupyter/.ipynb_checkpoints/
+caps_implementation/jupyter/__pycache__/
+caps_implementation/logs/
+caps_implementation/test/
+caps_implementation/out/
+caps_implementation/models/
+
