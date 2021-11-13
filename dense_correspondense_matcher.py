@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 from caps_implementation.CAPS.caps_model import CAPSModel, CAPSNet
 import caps_implementation.config as config
 
-model = superpoint.SuperPointFrontend(weights_path='SuperPointPretrainedNetwork/superpoint_v1.pth',
-                                      nms_dist=4, conf_thresh=0.015, nn_thresh=0.7, cuda=False)
-# model = superpoint.SuperPointFrontend(weights_path='superpointv1_TLShomo1.pt',
+# model = superpoint.SuperPointFrontend(weights_path='SuperPointPretrainedNetwork/superpoint_v1.pth',
 #                                       nms_dist=4, conf_thresh=0.015, nn_thresh=0.7, cuda=False)
+model = superpoint.SuperPointFrontend(weights_path='superpointv1_TLShomo2.pt',
+                                      nms_dist=4, conf_thresh=0.015, nn_thresh=0.7, cuda=False)
 
 # https://github.com/mmmfarrell/SuperPoint/blob/master/superpoint/match_features_demo.py
 descriptor_matcher = superpoint.PointTracker(max_length=4, nn_thresh=0.7)

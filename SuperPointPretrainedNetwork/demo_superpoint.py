@@ -69,6 +69,7 @@ myjet = np.array([[0.        , 0.        , 0.5       ],
                   [0.99910873, 0.07334786, 0.        ],
                   [0.5       , 0.        , 0.        ]])
 
+
 class SuperPointNet(torch.nn.Module):
   """ Pytorch definition of SuperPoint Network. """
   def __init__(self):
