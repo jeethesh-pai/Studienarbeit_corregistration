@@ -34,7 +34,7 @@ data:
                     perspective_amplitude_y: 0.3 # min: 0 max: 1.0
                     allow_artifacts: true
                     patch_ratio: 0.85  # max size of the image to crop and transform. min: 0.5 max: 1 (no crop)
-                    max_angle: 0.785 # max angle of rotation in rad
+                    max_angle: 0.3925 # max angle of rotation in rad
                     translation_overflow: 0.2 # max overflow of image outside boundary max: 1.0 (full image out of boundary)
 
 model:

@@ -52,10 +52,11 @@ def warp_points(points: np.ndarray, homography: np.ndarray):
     return warped_points[:, :2] / (warped_points[:, 2:] + 1e-6)  # small number to eliminate division by zero
 
 
-def estimate_homography(homo_mat_true: np.ndarray, homo_mat_pred: np.ndarray):
-    points = np.asarray([[0, 0], [1, 0], [1, 1], [0, 1]])
+def estimate_homography(homo_mat_true: np.ndarray, homo_mat_pred: np.ndarray, img_shape: tuple):
+    points = np.asarray([[0, 0], [img_shape[0], 0], [img_shape[0], img_shape[1] - 1], [0, img_shape[1]]])
     warped_true = warp_points(points, homo_mat_true)
     warped_pred = warp_points(points, homo_mat_pred)
+    mean_dist = np.linalg.norm(warped_true - warped_pred, axis=1)
     pass
 
 
@@ -66,6 +67,7 @@ SuperPointModel = SuperPointNet()
 SuperPointModel.load_state_dict(detector_weights)
 SuperPointModel.train(mode=False)
 args_caps = config_caps.get_args()
+shape = config['data']['preprocessing']['resize']  # width, height
 args_caps.ckpt_path = config['CAPS_weights']
 CAPSModel = CAPSModel(args_caps)
 caps_transform = transforms.Compose([transforms.Grayscale(num_output_channels=3),
@@ -87,16 +89,22 @@ for sample in data_loader:
     out_warped = SuperPointModel(sample['warped_image_superpoint'])
     pts_warped = extract_superpoint_keypoints(out_warped['semi'])
     pts_warped_caps = convertToTorchKeypoints(pts_warped, device)
-    feat_c_warped, feat_f_warped = CAPSModel.extract_features(sample['caps_image'], pts_warped_caps)
+    feat_c_warped, feat_f_warped = CAPSModel.extract_features(sample['warped_image_caps'], pts_warped_caps)
     descriptor_warped = torch.cat((feat_c_warped, feat_f_warped), -1).squeeze(0).detach().cpu().numpy()
     match_kp1, match_kp2, matches = match_descriptors(pts, descriptor, pts_warped, descriptor_warped)
     h_mat, inlier_points = compute_homography(match_kp1, match_kp2)
     match = np.array(matches)[inlier_points.astype(bool)].tolist()
-    estimate_homography(sample['homography'].squeeze().numpy(), h_mat)
+    estimate_homography(sample['homography'].squeeze().numpy(), h_mat, shape)
     img1 = (sample['superpoint_image'].numpy().squeeze() * 255).astype(np.uint8)
+    # cv2.imwrite('Dense_match/img1.jpg', img1)
     img2 = (sample['warped_image_superpoint'].numpy().squeeze() * 255).astype(np.uint8)
+    # cv2.imwrite('Dense_match/img2.jpg', img2)
+    img1_pred_warp = cv2.warpPerspective(img1, h_mat, dsize=shape, flags=cv2.INTER_LINEAR)
+    fig, axes = plt.subplots(1, 2)
+    axes[0].imshow(img1, cmap='gray')
+    axes[1].imshow(img1_pred_warp, cmap='gray')
+    plt.show()
     combined_image = cv2.drawMatches(img1, pts, img2, pts_warped, match, None, matchColor=(0, 255, 0),
                                      singlePointColor=(0, 0, 255))
     plt.imshow(combined_image, cmap='gray')
     plt.show()
-    print(sample)

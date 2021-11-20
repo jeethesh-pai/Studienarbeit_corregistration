@@ -260,7 +260,7 @@ def draw_matches_sift(img1: np.ndarray, img2: np.ndarray) -> (np.ndarray, np.nda
 # # matched_img = cv2.cvtColor(matched_img, cv2.COLOR_BGR2RGB)
 # # keypoint_image = cv2.cvtColor(keypoint_image, cv2.COLOR_BGR2RGB)
 # # matched_image, kp_image = draw_matches_orb(image1, image2)
-# cv2.imwrite("Results/library_superpoint_author_0_caps_untrained.png", matched_image)
+# # cv2.imwrite("Results/library_superpoint_author_0_caps_untrained.png", matched_image)
 # matched_image = cv2.cvtColor(matched_image, cv2.COLOR_BGR2RGB)
 # plt.imshow(matched_image)
 # plt.show()
