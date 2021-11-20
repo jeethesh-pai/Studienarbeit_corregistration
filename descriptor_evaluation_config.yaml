@@ -44,8 +44,8 @@ model:
     descriptor_dist: 8
     epsilon: 5 # max distance between the pixels to be considered as true - see homography estimation metric
 
-detector_weights: "superpointv1_TLShomo1.pt" # weights of Superpoint - set this to false if not training with Superpoint
-CAPS_weights: "../homoAdaptiter2.pt"  # weights of CAPS
+detector_weights: "weights/superpointv1_TLShomo1.pt" # weights of Superpoint - set this to false if not training with Superpoint
+CAPS_weights: "CAPS_grayscale_weights/150000.pth"  # weights of CAPS
 
 
 

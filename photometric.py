@@ -39,6 +39,6 @@ class ImgAugTransform:
             self.aug = iaa.Sequential([iaa.Noop()])
 
     def __call__(self, img: np.ndarray):
-        img = img.astype(np.uint8)
+        # img = img.astype(np.uint8)
         img = self.aug.augment_image(img)
         return img

@@ -253,3 +253,33 @@ def nms_fast(in_corners, H, W, dist_thresh):
     out = out[:, inds2]
     out_inds = inds1[inds_keep[inds2]]
     return out, out_inds
+
+
+def extract_superpoint_keypoints(img, model):
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_gray = np.asarray(img_gray, dtype=np.float32) / 255.0
+    keypoint, descriptor, heat_map = model.run(img_gray)
+    keypoint = np.transpose(keypoint)
+    keypoint = [cv2.KeyPoint(int(point[0]), int(point[1]), 1) for point in keypoint]
+    return keypoint, descriptor
+
+
+def extract_CAPSDescriptor(keypoint, img):
+    args = config.get_args()
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    args.data_dir = "Dense_match"
+    args.ckpt_path = "CAPS_grayscale_weights/150000.pth"
+    # args.ckpt_path = "caps-pretrained.pth"
+    descriptor_model = CAPSModel(args)
+    img_transform = transforms.Compose([transforms.Grayscale(num_output_channels=3),
+                                        transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
+    img = torch.from_numpy(img).float().to(device) / 255.0
+    img = torch.unsqueeze(img, dim=0)
+    img = img.permute(0, 3, 1, 2)
+    img = img_transform(img)
+    keypoint = cv2.KeyPoint_convert(keypoint)
+    keypoint = torch.Tensor(keypoint).to(device)
+    keypoint = torch.unsqueeze(keypoint, dim=0).int()
+    feat_c, feat_f = descriptor_model.extract_features(img, keypoint)
+    descriptor = torch.cat((feat_c, feat_f), -1).squeeze(0).detach().cpu().numpy()
+    return descriptor

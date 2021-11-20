@@ -138,4 +138,5 @@ caps_implementation/logs/
 caps_implementation/test/
 caps_implementation/out/
 caps_implementation/models/
-
+weights/
+Results/
